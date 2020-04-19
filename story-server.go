@@ -1,22 +1,39 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"github.com/gorilla/mux"
 	"log"
 	"net/http"
+	"os"
 	"strings"
 	"time"
 )
 
+var args struct {
+	port *string
+}
+
+func init() {
+	args.port = flag.String("port", "3456", "HTTP server port")
+}
+
 func main() {
-	err := startServer(3456)
+	flag.Parse()
+	port := os.Getenv("PORT")
+
+	if port == "" {
+		port = *args.port
+	}
+
+	err := startServer(port)
 	if err != nil {
 		log.Fatal(err)
 	}
 }
 
-func startServer(port int) error {
+func startServer(port string) error {
 	h := mux.NewRouter()
 
 	h.HandleFunc("/", DefaultEndPoint)
@@ -26,9 +43,9 @@ func startServer(port int) error {
 		ReadTimeout: 15 * time.Second,
 		WriteTimeout: 15 * time.Second,
 		Handler: full,
-		Addr: fmt.Sprintf(":%d", port),
+		Addr: fmt.Sprintf(":%s", port),
 	}
-	log.Printf("Starting HTTP server on port %d", port)
+	log.Printf("Starting HTTP server on port %s", port)
 	return srv.ListenAndServe()
 }
 
