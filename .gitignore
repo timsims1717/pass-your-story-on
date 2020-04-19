@@ -1,9 +1,14 @@
+# idea
+.idea/
+pass-your-story-on.iml
+
 # Binaries for programs and plugins
 *.exe
 *.exe~
 *.dll
 *.so
 *.dylib
+pass-your-story-on
 
 # Test binary, built with `go test -c`
 *.test
