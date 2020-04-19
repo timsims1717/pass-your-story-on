@@ -1,5 +1,90 @@
-<h1>Hello World!</h1>
+<!DOCTYPE html>
+<html>
+<head>
+</head>
 
-This is a test page!
+<body>
+    <h1>Pass Your Story On</h1>
 
-Template test: {{.Title}}
+    <label for="name-entry">Name:</label><input id="name-entry" type="text"/>
+    <button id="create-game" class="basic-button">
+        Create Game
+    </button>
+
+</body>
+</html>
+
+<script>
+    /* Variables */
+
+    const gameURL = "{{.ServerURL}}/game";
+    const playURL = "{{.ServerURL}}/play/";
+
+    /* Functions */
+
+    const createGameSuccess = function (response) {
+        let json = JSON.parse(response);
+        window.location = playURL + json.id;
+    };
+
+    /* Element Logic */
+
+    // Clicking on the create button sends a request to start the game
+    let createButton = document.getElementById("create-game");
+    createButton.onclick = function () {
+        this.disabled = true;
+        let name = document.getElementById("name-entry").value;
+        if (name.length === 0) {
+            alert("You can't have a blank name!");
+            this.disabled = false;
+            return;
+        } else if (name.length > 20) {
+            alert("Your name can't be longer than 20 characters.");
+            this.disabled = false;
+            return;
+        }
+        let data = {
+            name: name
+        };
+        postToServer(gameURL, data, createGameSuccess, genericFailure);
+    };
+
+    /* Requests */
+
+    const postToServer = function (url, json_object, onSuccess, onFailure) {
+        let request = new XMLHttpRequest();
+        request.onreadystatechange = function () {
+            if (request.readyState === XMLHttpRequest.DONE) {
+                let response = request.responseText;
+                if (request.status >= 200 && request.status < 400) {
+                    onSuccess(response);
+                } else {
+                    onFailure(response);
+                }
+            }
+        };
+        request.open("POST", url);
+        request.setRequestHeader("Content-Type","text/plain; charset=UTF-8");
+        request.send(JSON.stringify(json_object));
+    };
+
+    const getFromServer = function (url, onSuccess, onFailure) {
+        let request = new XMLHttpRequest();
+        request.onreadystatechange = function () {
+            if (request.readyState === XMLHttpRequest.DONE) {
+                let response = request.responseText;
+                if (request.status >= 200 && request.status < 400) {
+                    onSuccess(response);
+                } else {
+                    onFailure(response);
+                }
+            }
+        };
+        request.open("GET", url);
+        request.send();
+    };
+
+    const genericFailure = function (response) {
+        alert(response);
+    };
+</script>

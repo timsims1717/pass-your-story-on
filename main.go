@@ -22,26 +22,34 @@ func init() {
 func main() {
 	flag.Parse()
 	port := os.Getenv("PORT")
+	addr := "https://pass-your-story-on.herokuapp.com/"
 
 	if port == "" {
 		port = *args.port
+		addr = fmt.Sprintf("http://localhost:%s", port)
 	}
 
-	err := startServer(port)
+	err := startServer(addr, port)
 	if err != nil {
 		log.Fatal(err)
 	}
 }
 
-func startServer(port string) error {
+func startServer(addr, port string) error {
+	hand := &Hand{
+		ServerURL: addr,
+	}
+
 	h := mux.NewRouter()
 
-	h.HandleFunc("/", HandleHomePage)
+	h.HandleFunc("/", hand.HandleHomePage)
+	h.HandleFunc("/game", hand.HandleGame)
+	h.HandleFunc("/play/{id}", hand.HandlePlay)
 
 	full := http.TimeoutHandler(installMiddleware(h), 5 * time.Second, "")
 	srv := &http.Server {
-		ReadTimeout: 15 * time.Second,
-		WriteTimeout: 15 * time.Second,
+		ReadTimeout: 5 * time.Second,
+		WriteTimeout: 5 * time.Second,
 		Handler: full,
 		Addr: fmt.Sprintf(":%s", port),
 	}
