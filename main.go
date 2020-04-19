@@ -22,7 +22,7 @@ func init() {
 func main() {
 	flag.Parse()
 	port := os.Getenv("PORT")
-	addr := "https://pass-your-story-on.herokuapp.com/"
+	addr := "https://pass-your-story-on.herokuapp.com"
 
 	if port == "" {
 		port = *args.port
