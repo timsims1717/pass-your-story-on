@@ -36,7 +36,7 @@ func main() {
 func startServer(port string) error {
 	h := mux.NewRouter()
 
-	h.HandleFunc("/", DefaultEndPoint)
+	h.HandleFunc("/", HandleHomePage)
 
 	full := http.TimeoutHandler(installMiddleware(h), 5 * time.Second, "")
 	srv := &http.Server {
