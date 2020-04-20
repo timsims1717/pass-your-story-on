@@ -22,29 +22,32 @@ func init() {
 func main() {
 	flag.Parse()
 	port := os.Getenv("PORT")
-	addr := "https://pass-your-story-on.herokuapp.com"
+	addr := "pass-your-story-on.herokuapp.com"
+	prot := "https"
 
 	if port == "" {
 		port = *args.port
-		addr = fmt.Sprintf("http://localhost:%s", port)
+		addr = fmt.Sprintf("localhost:%s", port)
+		prot = "http"
 	}
 
-	err := startServer(addr, port)
-	if err != nil {
-		log.Fatal(err)
-	}
+	startServers(addr, port, prot)
 }
 
-func startServer(addr, port string) error {
+func startServers(addr, port, prot string) {
 	hand := &Hand{
 		ServerURL: addr,
+		Protocol:  prot,
 	}
 
 	h := mux.NewRouter()
 
+	h.PathPrefix("/public/").Handler(http.StripPrefix("/public/", http.FileServer(http.Dir("./html/public"))))
+
 	h.HandleFunc("/", hand.HandleHomePage)
-	h.HandleFunc("/game", hand.HandleGame)
-	h.HandleFunc("/play/{id}", hand.HandlePlay)
+	h.HandleFunc("/create", hand.HandleCreate)
+	h.HandleFunc("/game/{id}", hand.HandleGame)
+	h.HandleFunc("/play", hand.HandlePlay)
 
 	full := http.TimeoutHandler(installMiddleware(h), 5 * time.Second, "")
 	srv := &http.Server {
@@ -54,7 +57,7 @@ func startServer(addr, port string) error {
 		Addr: fmt.Sprintf(":%s", port),
 	}
 	log.Printf("Starting HTTP server on port %s", port)
-	return srv.ListenAndServe()
+	log.Fatal(srv.ListenAndServe())
 }
 
 // Middleware

@@ -1,12 +1,13 @@
 <!DOCTYPE html>
 <html>
 <head>
+    <title id="title">Pass Your Story On!</title>
+    <link rel="stylesheet" type="text/css" href="{{.Protocol}}://{{.ServerURL}}/public/style.css" />
 </head>
 
 <body>
     <h1>Pass Your Story On</h1>
 
-    <label for="name-entry">Name:</label><input id="name-entry" type="text"/>
     <button id="create-game" class="basic-button">
         Create Game
     </button>
@@ -14,17 +15,18 @@
 </body>
 </html>
 
+<script src="{{.Protocol}}://{{.ServerURL}}/public/base.js"></script>
 <script>
     /* Variables */
 
-    const gameURL = "{{.ServerURL}}/game";
-    const playURL = "{{.ServerURL}}/play/";
+    const createURL = "{{.Protocol}}://{{.ServerURL}}/create";
+    const gameURL = "{{.Protocol}}://{{.ServerURL}}/game/";
 
     /* Functions */
 
     const createGameSuccess = function (response) {
         let json = JSON.parse(response);
-        window.location = playURL + json.id;
+        window.location = gameURL + json.id;
     };
 
     /* Element Logic */
@@ -33,58 +35,7 @@
     let createButton = document.getElementById("create-game");
     createButton.onclick = function () {
         this.disabled = true;
-        let name = document.getElementById("name-entry").value;
-        if (name.length === 0) {
-            alert("You can't have a blank name!");
-            this.disabled = false;
-            return;
-        } else if (name.length > 20) {
-            alert("Your name can't be longer than 20 characters.");
-            this.disabled = false;
-            return;
-        }
-        let data = {
-            name: name
-        };
-        postToServer(gameURL, data, createGameSuccess, genericFailure);
-    };
-
-    /* Requests */
-
-    const postToServer = function (url, json_object, onSuccess, onFailure) {
-        let request = new XMLHttpRequest();
-        request.onreadystatechange = function () {
-            if (request.readyState === XMLHttpRequest.DONE) {
-                let response = request.responseText;
-                if (request.status >= 200 && request.status < 400) {
-                    onSuccess(response);
-                } else {
-                    onFailure(response);
-                }
-            }
-        };
-        request.open("POST", url);
-        request.setRequestHeader("Content-Type","text/plain; charset=UTF-8");
-        request.send(JSON.stringify(json_object));
-    };
-
-    const getFromServer = function (url, onSuccess, onFailure) {
-        let request = new XMLHttpRequest();
-        request.onreadystatechange = function () {
-            if (request.readyState === XMLHttpRequest.DONE) {
-                let response = request.responseText;
-                if (request.status >= 200 && request.status < 400) {
-                    onSuccess(response);
-                } else {
-                    onFailure(response);
-                }
-            }
-        };
-        request.open("GET", url);
-        request.send();
-    };
-
-    const genericFailure = function (response) {
-        alert(response);
+        let data = {};
+        postToServer(createURL, data, createGameSuccess, genericFailure);
     };
 </script>

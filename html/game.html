@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title id="title">Joining game ...</title>
+    <link rel="stylesheet" type="text/css" href="{{.Protocol}}://{{.ServerURL}}/public/style.css" />
+</head>
+
+<body>
+    <h2>You made it to the play page!</h2>
+
+    <!-- Name Prompt -->
+    <div id="name-prompt"
+         class="floating-box shadow-border hidden">
+
+    </div>
+</body>
+</html>
+
+<script src="{{.Protocol}}://{{.ServerURL}}/public/base.js"></script>
+<script>
+    let ws;
+
+    const openSocket = function () {
+        if ("WebSocket" in window) {
+            // web sockets supported
+            ws = new WebSocket("ws://{{.ServerURL}}/play");
+            ws.onopen = onOpen;
+            ws.onmessage = onMessage;
+            ws.onerror = onError;
+            ws.onclose = onClose;
+        } else {
+            alert("Your browser does not support Web Sockets. :(");
+        }
+    };
+
+    const onOpen = function () {
+        // open name prompt
+    };
+
+    const onMessage = function (evt) {
+        alert("Message: " + evt.data);
+    };
+
+    const onError = function (evt) {
+        alert("Error: " + evt.data);
+    };
+
+    const onClose = function () {
+        alert("Your connection to the game was lost!");
+        ws = null;
+        window.location = "{{.Protocol}}://{{.ServerURL}}";
+    };
+
+    window.addEventListener("load", openSocket);
+</script>

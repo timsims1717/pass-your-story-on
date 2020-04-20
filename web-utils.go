@@ -5,7 +5,9 @@ import (
 )
 
 type PageData struct {
-	ServerURL string
+	ServerURL  string
+	Protocol   string
+	PlayerName string
 }
 
 type WebError struct {
