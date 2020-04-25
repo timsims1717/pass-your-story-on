@@ -9,14 +9,15 @@ import (
 )
 
 const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+
 var Games = make(map[string]*Game, 0)
 var Players = make(map[string]*Player, 0)
 
 type Player struct {
-	Name       string
-	Host       bool
-	ToClient   chan string
-	Conn       *websocket.Conn
+	Name     string
+	Host     bool
+	ToClient chan string
+	Conn     *websocket.Conn
 }
 
 /* Play functions */
@@ -95,7 +96,7 @@ func (p *Player) ListenFromClient(intoGame chan<- Message) {
 		}
 		m := string(message)
 		intoGame <- Message{
-			Name: p.Name,
+			Name:    p.Name,
 			Content: m,
 		}
 	}
@@ -159,10 +160,10 @@ func NewPlayer(name, id string, conn *websocket.Conn) error {
 		}
 		toClient := make(chan string, 0)
 		player := &Player{
-			Name: name,
-			Host: host,
+			Name:     name,
+			Host:     host,
 			ToClient: toClient,
-			Conn: conn,
+			Conn:     conn,
 		}
 		go player.ListenFromClient(game.Inbound)
 		go player.SendToClient()

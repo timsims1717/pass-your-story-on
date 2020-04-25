@@ -10,8 +10,10 @@ import (
 )
 
 type Hand struct {
-	ServerURL string
-	Protocol  string
+	ServerURL      string
+	Protocol       string
+	Port           string
+	SocketProtocol string
 }
 
 func (hand *Hand) HandleHomePage(w http.ResponseWriter, r *http.Request) {
@@ -77,9 +79,10 @@ func handleJoin(w http.ResponseWriter, r *http.Request) {
 func (hand *Hand) HandleGame(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	pageData := PageData{
-		ServerURL: hand.ServerURL,
-		Protocol:  hand.Protocol,
-		GameID:    vars["id"],
+		ServerURL:      hand.ServerURL,
+		SocketProtocol: hand.SocketProtocol,
+		Protocol:       hand.Protocol,
+		GameID:         vars["id"],
 	}
 	t, err := template.ParseFiles("html/game.html")
 	if err != nil {

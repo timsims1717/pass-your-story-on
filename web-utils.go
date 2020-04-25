@@ -5,10 +5,11 @@ import (
 )
 
 type PageData struct {
-	ServerURL  string
-	Protocol   string
-	PlayerName string
-	GameID     string
+	ServerURL      string
+	Protocol       string
+	SocketProtocol string
+	PlayerName     string
+	GameID         string
 }
 
 type WebError struct {

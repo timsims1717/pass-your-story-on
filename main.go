@@ -24,21 +24,26 @@ func main() {
 	port := os.Getenv("PORT")
 	addr := "pass-your-story-on.herokuapp.com"
 	prot := "https"
+	sprot := "wss"
 
 	if port == "" {
 		port = *args.port
 		addr = fmt.Sprintf("localhost:%s", port)
 		prot = "http"
+		sprot = "ws"
 	}
 
-	startServers(addr, port, prot)
+	hand := &Hand{
+		ServerURL:      addr,
+		Protocol:       prot,
+		Port:           port,
+		SocketProtocol: sprot,
+	}
+
+	startServers(hand)
 }
 
-func startServers(addr, port, prot string) {
-	hand := &Hand{
-		ServerURL: addr,
-		Protocol:  prot,
-	}
+func startServers(hand *Hand) {
 
 	h := mux.NewRouter()
 
@@ -49,14 +54,14 @@ func startServers(addr, port, prot string) {
 	h.HandleFunc("/play/{id}", hand.HandlePlay)
 	h.HandleFunc("/", hand.HandleHomePage)
 
-	full := http.TimeoutHandler(installMiddleware(h), 5 * time.Second, "")
-	srv := &http.Server {
-		ReadTimeout: 5 * time.Second,
+	full := http.TimeoutHandler(installMiddleware(h), 5*time.Second, "")
+	srv := &http.Server{
+		ReadTimeout:  5 * time.Second,
 		WriteTimeout: 5 * time.Second,
-		Handler: full,
-		Addr: fmt.Sprintf(":%s", port),
+		Handler:      full,
+		Addr:         fmt.Sprintf(":%s", hand.Port),
 	}
-	log.Printf("Starting HTTP server on port %s", port)
+	log.Printf("Starting HTTP server on port %s", hand.Port)
 	log.Fatal(srv.ListenAndServe())
 }
 

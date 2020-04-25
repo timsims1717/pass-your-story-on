@@ -44,7 +44,7 @@ type Game struct {
 }
 
 type Message struct {
-	Name string
+	Name    string
 	Content string
 }
 
@@ -113,7 +113,7 @@ func (g *Game) StorySoFar() {
 		// convert story to json
 
 		g.OutBound <- Message{
-			Name: p,
+			Name:    p,
 			Content: "story so far",
 		}
 	}
@@ -147,7 +147,7 @@ func (g *Game) NextState() {
 		}
 	case ActiveWrite:
 		round := g.State.Round
-		if round == g.Options.NumRounds * len(g.Players) {
+		if round == g.Options.NumRounds*len(g.Players) {
 			g.State = &GameState{
 				Phase: Finished,
 				Round: 0,
@@ -176,7 +176,7 @@ func (g *Game) SetState(phase GamePhase, round int) {
 
 func DefaultOptions() *GameOptions {
 	return &GameOptions{
-		Timer: 120,
+		Timer:     120,
 		NumRounds: 1,
 		WordLimit: 250,
 	}
