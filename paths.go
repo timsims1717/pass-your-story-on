@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"github.com/gorilla/mux"
 	"github.com/gorilla/websocket"
 	"html/template"
 	"log"
@@ -31,13 +32,11 @@ func (hand *Hand) HandleHomePage(w http.ResponseWriter, r *http.Request) {
 }
 
 type GameRequest struct {
-	ID   string `json:"id"`
-	Name string `json:"name"`
+	ID string `json:"id"`
 }
 
 type GameResponse struct {
-	ID   string `json:"id"`
-	Name string `json:"name"`
+	ID string `json:"id"`
 }
 
 func (hand *Hand) HandleCreate(w http.ResponseWriter, r *http.Request) {
@@ -48,10 +47,14 @@ func (hand *Hand) HandleCreate(w http.ResponseWriter, r *http.Request) {
 		HandleError(w, "/create", err)
 		return
 	}
-	// todo: create Game ID
 	res := new(GameResponse)
+	//id := NewGame()
+	//res.ID = id
+	testId := "PYSO"
+	if !GameExists(testId) {
+		NewGame()
+	}
 	res.ID = "PYSO"
-	res.Name = request.Name
 	resBytes, err := json.Marshal(res)
 	if err != nil {
 		HandleError(w, "/create", err)
@@ -72,9 +75,11 @@ func handleJoin(w http.ResponseWriter, r *http.Request) {
 }
 
 func (hand *Hand) HandleGame(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
 	pageData := PageData{
 		ServerURL: hand.ServerURL,
 		Protocol:  hand.Protocol,
+		GameID:    vars["id"],
 	}
 	t, err := template.ParseFiles("html/game.html")
 	if err != nil {
@@ -91,25 +96,15 @@ func (hand *Hand) HandleGame(w http.ResponseWriter, r *http.Request) {
 var upgrader = websocket.Upgrader{}
 
 func (hand *Hand) HandlePlay(w http.ResponseWriter, r *http.Request) {
-	c, err := upgrader.Upgrade(w, r, nil)
+	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
-		log.Printf("%s %s", "/play", err)
+		log.Printf("/play %s", err)
 		return
 	}
-	defer c.Close()
-	for {
-		mt, message, err := c.ReadMessage()
-		if err != nil {
-			log.Println("read:", err)
-			break
-		}
-		log.Printf("recv: %s", message)
-		err = c.WriteMessage(mt, message)
-		if err != nil {
-			log.Println("write:", err)
-			break
-		}
-	}
+	defer conn.Close()
+	vars := mux.Vars(r)
+	gameId := vars["id"]
+	HandlePlayer(gameId, conn)
 }
 
 func HandleError(w http.ResponseWriter, source string, err error) {

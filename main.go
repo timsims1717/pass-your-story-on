@@ -44,10 +44,10 @@ func startServers(addr, port, prot string) {
 
 	h.PathPrefix("/public/").Handler(http.StripPrefix("/public/", http.FileServer(http.Dir("./html/public"))))
 
-	h.HandleFunc("/", hand.HandleHomePage)
 	h.HandleFunc("/create", hand.HandleCreate)
 	h.HandleFunc("/game/{id}", hand.HandleGame)
-	h.HandleFunc("/play", hand.HandlePlay)
+	h.HandleFunc("/play/{id}", hand.HandlePlay)
+	h.HandleFunc("/", hand.HandleHomePage)
 
 	full := http.TimeoutHandler(installMiddleware(h), 5 * time.Second, "")
 	srv := &http.Server {

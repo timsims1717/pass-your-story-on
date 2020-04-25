@@ -8,6 +8,7 @@ type PageData struct {
 	ServerURL  string
 	Protocol   string
 	PlayerName string
+	GameID     string
 }
 
 type WebError struct {

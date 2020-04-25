@@ -11,7 +11,8 @@
     <!-- Name Prompt -->
     <div id="name-prompt"
          class="floating-box shadow-border hidden">
-
+        <h3><label for="name-entry">Enter Your Name:</label></h3>
+        <input id="name-entry" type="text"/>
     </div>
 </body>
 </html>
@@ -23,7 +24,9 @@
     const openSocket = function () {
         if ("WebSocket" in window) {
             // web sockets supported
-            ws = new WebSocket("ws://{{.ServerURL}}/play");
+            if (!ws) {
+                ws = new WebSocket("ws://{{.ServerURL}}/play/{{.GameID}}");
+            }
             ws.onopen = onOpen;
             ws.onmessage = onMessage;
             ws.onerror = onError;
@@ -34,7 +37,7 @@
     };
 
     const onOpen = function () {
-        // open name prompt
+        // remove load? Requires load, haha.
     };
 
     const onMessage = function (evt) {
