@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"github.com/gorilla/websocket"
 	"math/rand"
 	"pass-your-story-on/play"
@@ -42,7 +41,7 @@ func CreateID() string {
 	if *args.debug {
 		return "PYSO"
 	} else {
-		return fmt.Sprintf("%q%q%q%q", chars[rand.Intn(len(chars))], chars[rand.Intn(len(chars))], chars[rand.Intn(len(chars))], chars[rand.Intn(len(chars))])
+		return string([]byte{chars[rand.Intn(len(chars))], chars[rand.Intn(len(chars))], chars[rand.Intn(len(chars))], chars[rand.Intn(len(chars))]})
 	}
 }
 
