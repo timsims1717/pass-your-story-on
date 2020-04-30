@@ -6,27 +6,111 @@
 </head>
 
 <body>
-    <h2>You made it to the play page!</h2>
+<!-- Loading -->
+<div id="loading-overlay">
+    <div class="overlay"></div>
+    <h1 class="overlay-message">Loading ...</h1>
+</div>
 
-    <!-- Name Prompt -->
-    <div id="name-prompt"
-         class="floating-box shadow-border hidden">
-        <h3><label for="name-entry">Enter Your Name:</label></h3>
-        <input id="name-entry" type="text"/>
+<!-- Starting -->
+<div id="starting-overlay" class="hidden">
+    <div class="overlay"></div>
+    <h1 class="overlay-message">Starting!</h1>
+</div>
+
+<!-- Finished -->
+<div id="finish-overlay" class="hidden">
+    <div class="overlay"></div>
+    <h1 class="overlay-message">Finished!</h1>
+</div>
+
+<div id="wrapper" class="row">
+    <!-- Chat Bar -->
+    <div id="chat" class="column">
+        <div class="inner-block">
+            <div id="player-box">
+
+            </div>
+            <div id="chat-box">
+
+            </div>
+            <div id="chat-entry">
+                <input id="chat-input" type="text" />
+                <button id="chat-submit" class="basic-button" type="button">Chat</button>
+            </div>
+        </div>
     </div>
+    <!-- Game Body -->
+    <div id="game-body" class="column inner-block">
+        <div id="player-info" class="row">
+            <h3 class="column by-three">{{.PlayerName}}</h3>
+            <h3 id="story-timer" class="column by-three"></h3>
+        </div>
+        <div id="pre-game-body" class="full-height">
+        </div>
+        <div id="story-body" class="full-height hidden">
+            <div id="story-so-far">
+
+            </div>
+            <textarea id="story-entry" class="hidden"></textarea>
+        </div>
+        <div id="display-body" class="full-height hidden">
+
+        </div>
+    </div>
+    <!-- Options Bar -->
+    <div id="options" class="column">
+        <div id="host-options" class="inner-block hidden">
+            <button id="start-game" class="basic-button" type="button">Start the Game!</button>
+        </div>
+        <div id="view-options" class="inner-block">
+
+        </div>
+    </div>
+</div>
 </body>
 </html>
 
 <script src="{{.Protocol}}://{{.ServerURL}}/public/base.js"></script>
 <script>
+    /* Elements */
+    let startButton = document.getElementById("start-game");
+    startButton.onclick = function () {
+        this.disabled = true;
+        ws.send(StartGame);
+    };
+
+    let chatButton = document.getElementById("chat-submit");
+    chatButton.onclick = function () {
+        this.disabled = true;
+        let chatInput = document.getElementById("chat-input");
+        ws.send(Chat + " " + chatInput.value);
+        chatInput.value = "";
+        this.disabled = false;
+    };
+
+    let timer = document.getElementById("story-timer");
+    let storyEntry = document.getElementById("story-entry");
+
+    // Bodies
+    let preGameBody = document.getElementById("pre-game-body");
+    let storyBody = document.getElementById("story-body");
+    let displayBody = document.getElementById("display-body");
+
+    // Overlays
+    let startingOverlay = document.getElementById("starting-overlay");
+    let finishOverlay = document.getElementById("finish-overlay");
+
+    /* WebSocket */
     let ws;
 
-    const openSocket = function () {
+    const openSocket = function (url) {
         if ("WebSocket" in window) {
             // web sockets supported
-            if (!ws) {
-                ws = new WebSocket("{{.SocketProtocol}}://{{.ServerURL}}/play/{{.GameID}}");
+            if (ws) {
+                return false;
             }
+            ws = new WebSocket(url);
             ws.onopen = onOpen;
             ws.onmessage = onMessage;
             ws.onerror = onError;
@@ -37,11 +121,8 @@
     };
 
     const onOpen = function () {
-        // remove load? Requires load, haha.
-    };
-
-    const onMessage = function (evt) {
-        alert("Message: " + evt.data);
+        ws.send(GameIDSend + " {{.GameID}}");
+        ws.send(NameSend + " {{.PlayerName}}");
     };
 
     const onError = function (evt) {
@@ -51,8 +132,163 @@
     const onClose = function () {
         alert("Your connection to the game was lost!");
         ws = null;
-        window.location = "{{.Protocol}}://{{.ServerURL}}";
     };
 
-    window.addEventListener("load", openSocket);
+    window.onbeforeunload = function() {
+        ws.onclose = function () {}; // disable onclose handler first
+        ws.close();
+    };
+
+    /* Messages */
+
+    // Commands
+    const Connected = `connected`;
+    const Starting = `starting`;
+    const Failure = `failed`;
+    const Host = `host`;
+    const NameSend = `playerName`;
+    const GameIDSend = `gameId`;
+    const StartGame = `start`;
+    const Chat = `chat`;
+    const Write = `write`;
+    const Read = `read`;
+    const Save = `save`;
+    const Finished = `finish`
+    const Display = `display`
+
+    const onMessage = function (evt) {
+        const message = evt.data;
+        console.log(message);
+        if (message.includes(Connected)) {
+            loading(false);
+            ws.send(Connected);
+        } else if (message.includes(Host)) {
+            document.getElementById("view-options").classList.add("hidden");
+            document.getElementById("host-options").classList.remove("hidden");
+        } else if (message.includes(Starting)) {
+            startingOverlay.classList.remove("hidden");
+        } else if (message.includes(Failure)) {
+            alert(message);
+            window.location = "{{.Protocol}}://{{.ServerURL}}"
+        } else if (message.includes(Write)) {
+            startingOverlay.classList.add("hidden");
+            preGameBody.classList.add("hidden");
+            storyBody.classList.remove("hidden");
+            let m = JSON.parse(message.substring(6));
+            buildStorySoFar(m["story"]);
+            storyEntry.value = "";
+            storyEntry.classList.remove("hidden");
+            startStoryTimer(m["timer"]);
+            saveStoryTimer(m["timer"]);
+        } else if (message.includes(Save)) {
+            startingOverlay.classList.add("hidden");
+            preGameBody.classList.add("hidden");
+            storyBody.classList.remove("hidden");
+            storyEntry.classList.add("hidden");
+            saveStory();
+        } else if (message.includes(Read)) {
+            startingOverlay.classList.add("hidden");
+            preGameBody.classList.add("hidden");
+            storyBody.classList.remove("hidden");
+            let m = JSON.parse(message.substring(5));
+            buildStorySoFar(m["story"]);
+            storyEntry.classList.add("hidden");
+            startStoryTimer(m["timer"]);
+        } else if (message.includes(Finished)) {
+            preGameBody.classList.add("hidden");
+            storyBody.classList.add("hidden");
+            displayBody.classList.remove("hidden");
+            finishOverlay.classList.remove("hidden");
+            storyEntry.classList.add("hidden");
+            saveStory();
+        } else if (message.includes(Display)) {
+            preGameBody.classList.add("hidden");
+            storyBody.classList.add("hidden");
+            displayBody.classList.remove("hidden");
+            finishOverlay.classList.add("hidden");
+            timer.innerHTML = "";
+            let m = JSON.parse(message.substring(8));
+            displayStories(m);
+        } else if (message.includes(Chat)) {
+
+        }
+    };
+
+    const buildStorySoFar = function (story) {
+        if (story.length === 0) {
+            // "Start Writing your story!"
+        } else {
+            let ssf = document.getElementById("story-so-far");
+            ssf.innerHTML = "";
+            for (let i = 0; i < story.length; i++) {
+                let p = document.createElement("p");
+                p.innerText = story[i]["content"];
+                ssf.appendChild(p);
+            }
+        }
+    };
+
+    const startStoryTimer = function (time) {
+        timer.innerHTML = "";
+        let timerInterval = setInterval(function () {
+            let now = Math.round(new Date().getTime()/1000);
+            let sec = Math.round(time);
+
+            let distance = sec - now + 1;
+
+            let minutes = Math.floor(distance / 60);
+            let seconds = Math.floor(distance % 60);
+
+            timer.innerHTML = minutes + ":" + (seconds > 9 ? "" : "0") + seconds;
+
+            if (distance < 1) {
+                clearInterval(timerInterval);
+                timer.innerHTML = "DONE";
+            }
+        }, 1000);
+    };
+
+    const saveStoryTimer = function (time) {
+        let saveInterval = setInterval(function () {
+            let now = Math.round(new Date().getTime()/1000);
+            let sec = Math.round(time);
+
+            let distance = sec - now;
+
+            if (distance < 0) {
+                clearInterval(saveInterval);
+            } else {
+                saveStory();
+            }
+        }, 9000);
+    };
+
+    const saveStory = function () {
+        saveValue(storyEntry);
+        ws.send(Save + " " + storyEntry.value);
+    };
+
+    const displayStories = function (stories) {
+        let yourStory = stories["{{.PlayerName}}"];
+        displayBody.innerHTML = "";
+        for (let i = 0; i < yourStory.length; i++) {
+            let p = document.createElement("p");
+            p.innerText = "<strong>" + yourStory[i]["author"] + ":</strong> " + yourStory[i]["content"];
+            displayBody.appendChild(p);
+        }
+    };
+
+    const loading = function (on) {
+        let loading = document.getElementById("loading-overlay");
+        if (on) {
+            loading.classList.remove("hidden");
+        } else {
+            loading.classList.add("hidden");
+        }
+    };
+
+    window.onload = function () {
+        storyEntry.value = loadValue("story-entry");
+        openSocket("{{.SocketProtocol}}://{{.ServerURL}}/play");
+    };
 </script>

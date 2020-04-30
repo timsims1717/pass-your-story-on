@@ -5,18 +5,20 @@ import (
 	"fmt"
 	"github.com/gorilla/mux"
 	"log"
+	"math/rand"
 	"net/http"
 	"os"
-	"strings"
 	"time"
 )
 
 var args struct {
-	port *string
+	port  *string
+	debug *bool
 }
 
 func init() {
 	args.port = flag.String("port", "3456", "HTTP server port")
+	args.debug = flag.Bool("d", false, "whether or not debug is on")
 }
 
 func main() {
@@ -33,32 +35,37 @@ func main() {
 		sprot = "ws"
 	}
 
+	rand.Seed(time.Now().UnixNano())
+
+	kill := make(chan string)
+	go KillGameListener(kill)
+
 	hand := &Hand{
 		ServerURL:      addr,
 		Protocol:       prot,
 		Port:           port,
 		SocketProtocol: sprot,
+		Kill:           kill,
 	}
 
 	startServers(hand)
 }
 
 func startServers(hand *Hand) {
-
 	h := mux.NewRouter()
 
 	h.PathPrefix("/public/").Handler(http.StripPrefix("/public/", http.FileServer(http.Dir("./html/public"))))
 
 	h.HandleFunc("/create", hand.HandleCreate)
-	h.HandleFunc("/game/{id}", hand.HandleGame)
-	h.HandleFunc("/play/{id}", hand.HandlePlay)
+	h.HandleFunc("/join", hand.HandleJoin)
+	h.HandleFunc("/game", hand.HandleGame)
+	h.HandleFunc("/play", hand.HandlePlay)
 	h.HandleFunc("/", hand.HandleHomePage)
 
-	full := http.TimeoutHandler(installMiddleware(h), 5*time.Second, "")
 	srv := &http.Server{
 		ReadTimeout:  5 * time.Second,
 		WriteTimeout: 5 * time.Second,
-		Handler:      full,
+		Handler:      h,
 		Addr:         fmt.Sprintf(":%s", hand.Port),
 	}
 	log.Printf("Starting HTTP server on port %s", hand.Port)
@@ -67,24 +74,4 @@ func startServers(hand *Hand) {
 
 // Middleware
 
-func installMiddleware(h http.Handler) http.Handler {
-	return logger(h)
-}
 
-func logger(h http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		logged := false
-		ipList := r.Header.Get("X-Forwarded-For")
-		if ipList != "" {
-			ips := strings.Split(ipList, ", ")
-			if len(ips) > 0 {
-				log.Printf("received %s %s request from %s", r.URL, r.Method, ips[0])
-				logged = true
-			}
-		}
-		if !logged {
-			log.Printf("received %s %s request", r.URL, r.Method)
-		}
-		h.ServeHTTP(w, r)
-	})
-}

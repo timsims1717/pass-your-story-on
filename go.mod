@@ -1,6 +1,6 @@
 module pass-your-story-on
 
-go 1.12
+go 1.14
 
 require (
 	github.com/gorilla/mux v1.7.4

@@ -8,9 +8,18 @@
 <body>
     <h1>Pass Your Story On</h1>
 
-    <button id="create-game" class="basic-button">
-        Create Game
-    </button>
+    <div id="game-prompt" class="floating-box shadow-border">
+        <h3><label for="name-entry">Enter Your Name:</label></h3>
+        <div id="name-error" class="hidden"></div>
+        <input id="name-entry" type="text" onkeyup="saveValue(this)"/><br>
+        <button id="create-game" class="basic-button">
+            Create Game
+        </button>
+        <button id="join-game" class="basic-button">
+            Join Game
+        </button>
+        <label for="game-id-entry">Game ID:</label><input id="game-id-entry" type="text" onkeyup="saveValue(this)"/>
+    </div>
 
 </body>
 </html>
@@ -20,22 +29,70 @@
     /* Variables */
 
     const createURL = "{{.Protocol}}://{{.ServerURL}}/create";
-    const gameURL = "{{.Protocol}}://{{.ServerURL}}/game/";
+    const joinURL = "{{.Protocol}}://{{.ServerURL}}/join";
+    const gameURL = "{{.Protocol}}://{{.ServerURL}}/game";
 
     /* Functions */
 
     const createGameSuccess = function (response) {
         let json = JSON.parse(response);
-        window.location = gameURL + json.id;
+        postChangePage(gameURL, json);
     };
 
     /* Element Logic */
 
-    // Clicking on the create button sends a request to start the game
+    // Clicking on the create button sends a request to create a game
     let createButton = document.getElementById("create-game");
+    let joinButton = document.getElementById("join-game");
+
     createButton.onclick = function () {
         this.disabled = true;
-        let data = {};
-        postToServer(createURL, data, createGameSuccess, genericFailure);
+        joinButton.disabled = true;
+        let data = {
+            "name": document.getElementById("name-entry").value
+        };
+        postToServer(createURL, data, createGameSuccess, createJoinFailure);
+    };
+
+    joinButton.onclick = function () {
+        this.disabled = true;
+        createButton.disabled = true;
+        let data = {
+            "id": document.getElementById("game-id-entry").value,
+            "name": document.getElementById("name-entry").value
+        };
+        postToServer(joinURL, data, createGameSuccess, createJoinFailure);
+    };
+
+    const createJoinFailure = function (response) {
+        createButton.disabled = false;
+        joinButton.disabled = false;
+        alert(response);
+    };
+
+    const postChangePage = function (path, params) {
+        const form = document.createElement("form");
+        form.method = "post";
+        form.action = path;
+
+        for (const key in params) {
+            if (params.hasOwnProperty(key)) {
+                const hiddenField = document.createElement('input');
+                hiddenField.type = 'hidden';
+                hiddenField.name = key;
+                hiddenField.value = params[key];
+
+                form.appendChild(hiddenField);
+            }
+        }
+
+        document.body.appendChild(form);
+        form.submit();
+    };
+
+    // Load saved values
+    window.onload = function () {
+        document.getElementById("name-entry").value = loadValue("name-entry");
+        document.getElementById("game-id-entry").value = loadValue("game-id-entry");
     };
 </script>

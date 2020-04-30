@@ -34,3 +34,14 @@ const getFromServer = function (url, onSuccess, onFailure) {
 const genericFailure = function (response) {
     alert(response);
 };
+
+const saveValue = function (e) {
+    localStorage.setItem(e.id, e.value);
+}
+
+const loadValue = function (id) {
+    if (!localStorage.getItem(id)) {
+        return "";
+    }
+    return localStorage.getItem(id);
+}
