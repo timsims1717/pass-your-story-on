@@ -5,7 +5,7 @@ func (g *Game) saveBufferInit() {
 		player.SendMessage(save, "")
 	}
 	g.State.Init = false
-	go g.runTimer(g.Options.FinishTimer)
+	go g.runTimer(finishTimer)
 }
 
 func (g *Game) saveBufferSelect() {

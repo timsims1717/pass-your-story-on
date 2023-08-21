@@ -18,6 +18,10 @@ func (g *Game) AddPlayer(name string) error {
 			return nil
 		}
 
+		if len(g.Order) >= playerLimit {
+			return errors.New("player limit reached")
+		}
+
 		// Is this the first player created? They are the host.
 		host := len(g.Order) == 0
 		g.Order = append(g.Order, name)
@@ -50,6 +54,10 @@ func (g *Game) preGameSelect() {
 		case StartGame:
 			if player.Host {
 				g.nextState()
+			}
+		case Option:
+			if player.Host {
+				g.updateOption(body)
 			}
 		default:
 			g.commonCommands(player, command, body)

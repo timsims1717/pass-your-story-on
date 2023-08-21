@@ -112,7 +112,7 @@ func (hand *Hand) HandleCreate(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// todo: make it so someone can re-join
+// todo: make it so someone can re-join (might only be heroku)
 func (hand *Hand) HandleJoin(w http.ResponseWriter, r *http.Request) {
 	pageData, wErr := hand.DecodeJSONRequest(r, true)
 	if wErr != nil {

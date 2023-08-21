@@ -28,8 +28,14 @@
     <!-- Chat Bar -->
     <div id="chat" class="column">
         <div class="inner-block">
-            <div id="player-box">
+            <div id="player-box" class="row">
+                <h4>Players:</h4>
+                <div id="player-list-left" class="column by-two">
 
+                </div>
+                <div id="player-list-right" class="column by-two">
+
+                </div>
             </div>
             <div id="chat-box">
 
@@ -94,6 +100,10 @@
     let storyEntry = document.getElementById("story-entry");
 
     // Bodies
+    let playerBox = document.getElementById("player-box");
+    let playerListLeft = document.getElementById("player-list-left");
+    let playerListRight = document.getElementById("player-list-right");
+
     let preGameBody = document.getElementById("pre-game-body");
     let storyBody = document.getElementById("story-body");
     let displayBody = document.getElementById("display-body");
@@ -156,61 +166,66 @@
     const Save = `save`;
     const Finished = `finish`
     const Display = `display`
+    const ListPlayers = `listPlayers`
 
     const onMessage = function (evt) {
-        const message = evt.data;
-        console.log(message);
-        if (message.includes(Connected)) {
+        const command = evt.data.substring(0, evt.data.indexOf(" "));
+        const message = evt.data.substring(command.length + 1);
+        console.log(command);
+        if (command.includes(Connected)) {
             loading(false);
             ws.send(Connected);
-        } else if (message.includes(Host)) {
+        } else if (command.includes(Host)) {
             document.getElementById("view-options").classList.add("hidden");
             document.getElementById("host-options").classList.remove("hidden");
-        } else if (message.includes(Starting)) {
+        } else if (command.includes(Starting)) {
             startingOverlay.classList.remove("hidden");
         } else if (message.includes(Failure)) {
-            alert(message);
+            alert(command);
             window.location = "{{.Protocol}}://{{.ServerURL}}"
-        } else if (message.includes(Write)) {
+        } else if (command.includes(Write)) {
             startingOverlay.classList.add("hidden");
             preGameBody.classList.add("hidden");
             storyBody.classList.remove("hidden");
-            let m = JSON.parse(message.substring(6));
+            let m = JSON.parse(message);
             buildStorySoFar(m["story"]);
             storyEntry.value = "";
             storyEntry.classList.remove("hidden");
             startStoryTimer(m["timer"]);
             saveStoryTimer(m["timer"]);
-        } else if (message.includes(Save)) {
+        } else if (command.includes(Save)) {
             startingOverlay.classList.add("hidden");
             preGameBody.classList.add("hidden");
             storyBody.classList.remove("hidden");
             storyEntry.classList.add("hidden");
             saveStory();
-        } else if (message.includes(Read)) {
+        } else if (command.includes(Read)) {
             startingOverlay.classList.add("hidden");
             preGameBody.classList.add("hidden");
             storyBody.classList.remove("hidden");
-            let m = JSON.parse(message.substring(5));
+            let m = JSON.parse(message);
             buildStorySoFar(m["story"]);
             storyEntry.classList.add("hidden");
             startStoryTimer(m["timer"]);
-        } else if (message.includes(Finished)) {
+        } else if (command.includes(Finished)) {
             preGameBody.classList.add("hidden");
             storyBody.classList.add("hidden");
             displayBody.classList.remove("hidden");
             finishOverlay.classList.remove("hidden");
             storyEntry.classList.add("hidden");
             saveStory();
-        } else if (message.includes(Display)) {
+        } else if (command.includes(Display)) {
             preGameBody.classList.add("hidden");
             storyBody.classList.add("hidden");
             displayBody.classList.remove("hidden");
             finishOverlay.classList.add("hidden");
             timer.innerHTML = "";
-            let m = JSON.parse(message.substring(8));
+            let m = JSON.parse(message);
             displayStories(m);
-        } else if (message.includes(Chat)) {
+        } else if (command.includes(ListPlayers)) {
+            console.log("here");
+            listPlayers(JSON.parse(message));
+        } else if (command.includes(Chat)) {
 
         }
     };
@@ -274,8 +289,24 @@
         displayBody.innerHTML = "";
         for (let i = 0; i < yourStory.length; i++) {
             let p = document.createElement("p");
-            p.innerText = "<strong>" + yourStory[i]["author"] + ":</strong> " + yourStory[i]["content"];
+            p.innerHTML = "<strong>" + yourStory[i]["author"] + ":</strong> " + yourStory[i]["content"];
             displayBody.appendChild(p);
+        }
+    };
+
+    const listPlayers = function (players) {
+        console.log(players);
+        playerListLeft.innerHTML = "";
+        playerListRight.innerHTML = "";
+        for (let i = 0; i < players.length; i++) {
+            let li = document.createElement("div");
+            li.id = players[i]["name"] + "-list-el";
+            li.innerText = players[i]["name"];
+            if (i < 6) {
+                playerListLeft.appendChild(li);
+            } else {
+                playerListRight.appendChild(li);
+            }
         }
     };
 

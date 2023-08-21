@@ -6,14 +6,16 @@ import (
 )
 
 type Player struct {
-	Name        string
-	Host        bool
-	Conn        *websocket.Conn
-	IntoGame    chan<- Message
-	Story       []Section
-	OrderIndex  int
-	LastControl string
-	LastBody    string
+	Name        string          `json:"name"`
+	Host        bool            `json:"host"`
+	Conn        *websocket.Conn `json:"-"`
+	IntoGame    chan<- Message  `json:"-"`
+	Story       []Section       `json:"story"`
+	OrderIndex  int             `json:"order"`
+	LastControl string          `json:"-"`
+	LastBody    string          `json:"-"`
+	Color       string          `json:"color"`
+	TypeFace    string          `json:"typeface"`
 }
 
 func (p *Player) ReceiveMessages() error {

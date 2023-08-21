@@ -1,15 +1,10 @@
 package play
 
-import "time"
-
-type GameOptions struct {
-	WriteTimer  int
-	ReadTimer   int
-	NumRounds   int
-	WordLimit   int
-	FinishTimer int
-	KillTimer   int
-}
+import (
+	"encoding/json"
+	"log"
+	"time"
+)
 
 type GameState struct {
 	Phase GamePhase
@@ -36,6 +31,10 @@ const SaveBuffer = GamePhase(3)
 const ActiveRead = GamePhase(4)
 const Finished = GamePhase(5)
 const Display = GamePhase(6)
+
+const playerLimit = 12
+const finishTimer = 3
+const killTimer = 1200
 
 type Game struct {
 	ID       string
@@ -79,19 +78,15 @@ func debugOptions() *GameOptions {
 		ReadTimer: 5,
 		NumRounds:  1,
 		WordLimit:  250,
-		FinishTimer: 3,
-		KillTimer: 60,
 	}
 }
 
 func defaultOptions() *GameOptions {
 	return &GameOptions{
 		WriteTimer: 120,
-		ReadTimer: 12,
+		ReadTimer: 24,
 		NumRounds:  1,
 		WordLimit:  250,
-		FinishTimer: 3,
-		KillTimer: 600,
 	}
 }
 
@@ -106,4 +101,24 @@ func (g *Game) FindPlayer(name string) *Player {
 func (g *Game) runTimer(t int) {
 	<-time.After(time.Duration(t) * time.Second)
 	g.Timing <- struct{}{}
+}
+
+func (g *Game) ListPlayers() string {
+	playerList := make([]*Player, 0)
+	for _, name := range g.Order {
+		playerList = append(playerList, g.Players[name])
+	}
+	players, err := json.Marshal(playerList)
+	if err != nil {
+		log.Printf("list players error: %s", err)
+		return ""
+	}
+	return string(players)
+}
+
+func (g *Game) ListPlayersToAll() {
+	playerList := g.ListPlayers()
+	for _, player := range g.Players {
+		player.SendMessage(ListPlayers, playerList)
+	}
 }

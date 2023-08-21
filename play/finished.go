@@ -10,7 +10,7 @@ func (g *Game) finishedInit() {
 		player.SendMessage(finish, "")
 	}
 	g.State.Init = false
-	go g.runTimer(g.Options.FinishTimer)
+	go g.runTimer(finishTimer)
 }
 
 func (g *Game) finishedSelect() {
@@ -47,7 +47,7 @@ func (g *Game) displayInit() {
 		player.SendMessage(display, string(jsonStories))
 	}
 	g.State.Init = false
-	go g.runTimer(g.Options.KillTimer)
+	go g.runTimer(killTimer)
 }
 
 func (g *Game) displaySelect() {

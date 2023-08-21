@@ -64,6 +64,7 @@ func (g *Game) commonSelect() {
 func (g *Game) commonCommands(player *Player, command, body string) {
 	switch command {
 	case Connected:
+		g.ListPlayersToAll()
 		g.connectedChat(player.Name)
 	case Chat:
 		g.chat(player.Name, body)
@@ -83,6 +84,9 @@ const read = `read`
 const save = `save`
 const finish = `finish`
 const display = `display`
+const ListPlayers = `listPlayers`
+const removePlayer = `removePlayer`
+const updatePlayer = `updatePlayer`
 
 // Splits the websocket message into a "command" and a "body"
 func splitMessage(message string) (string, string) {
